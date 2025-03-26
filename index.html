@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arca do Saber - Biblioteca Bíblica</title>
+    <style>
+        /* Reset e Estilos Gerais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0a0a1a;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.5s;
+        }
+
+        /* Tela de Carregamento */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0a0a1a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s ease-out;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="20" cy="20" r="0.5" fill="white"/><circle cx="50" cy="30" r="0.7" fill="white"/><circle cx="80" cy="20" r="0.3" fill="white"/><circle cx="10" cy="50" r="0.4" fill="white"/><circle cx="90" cy="60" r="0.6" fill="white"/><circle cx="30" cy="80" r="0.5" fill="white"/><circle cx="70" cy="70" r="0.8" fill="white"/></svg>');
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .loading-content {
+            text-align: center;
+            z-index: 1;
+        }
+
+        .loading-content h1 {
+            color: #d4af37;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+        }
+
+        .loading-content p {
+            color: #aaa;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .loading-progress {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #d4af37, #f1c40f);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .ark {
+            width: 150px;
+            height: 80px;
+            background-color: #5d4037;
+            position: relative;
+            border-radius: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .ark:before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25px;
+            width: 100px;
+            height: 60px;
+            background-color: #5d4037;
+            border-radius: 50% 50% 0 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .golden-sea {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(0deg, rgba(212, 175, 55, 0.8), transparent);
+            animation: wave 10s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { background-position-x: 0; }
+            100% { background-position-x: 1000px; }
+        }
+
+        /* Página Principal */
+        #main-content {
+            display: none;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .title {
+            font-size: 3rem;
+            color: #d4af37;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.7);
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        /* Efeitos de Chuva Dourada */
+        .golden-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .golden-drop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(transparent, #d4af37);
+            animation: rain 5s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes rain {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Efeitos de Raios */
+        .lightning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0;
+        }
+
+        .lightning.active {
+            animation: lightning 0.5s;
+        }
+
+        @keyframes lightning {
+            0% { opacity: 0; background: transparent; }
+            10% { opacity: 0.8; background: rgba(255, 255, 255, 0.8); }
+            20% { opacity: 0; background: transparent; }
+            30% { opacity: 0.6; background: rgba(255, 255, 255, 0.6); }
+            100% { opacity: 0; background: transparent; }
+        }
+
+        /* Botão da Palavra */
+        .word-button {
+            display: block;
+            width: 300px;
+            margin: 30px auto;
+            padding: 15px;
+            background: linear-gradient(135deg, #d4af37, #f1c40f);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .word-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        /* Versículo Exibido */
+        .verse-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: 15px;
+            border-left: 5px solid #d4af37;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .verse-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .verse-text {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #eee;
+        }
+
+        .verse-reference {
+            font-size: 1.2rem;
+            color: #d4af37;
+            text-align: right;
+            font-style: italic;
+        }
+
+        /* Anjo */
+        .angel {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            right: -30px;
+            top: -30px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .angel.show {
+            opacity: 1;
+        }
+
+        /* Seções Temáticas */
+        .themes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 50px 0;
+        }
+
+        .theme-card {
+            width: 250px;
+            padding: 20px;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            border-top: 3px solid;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-card.depression {
+            border-color: #3498db;
+        }
+
+        .theme-card.depression:hover {
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .theme-card.sadness {
+            border-color: #9b59b6;
+        }
+
+        .theme-card.sadness:hover {
+            box-shadow: 0 10px 20px rgba(155, 89, 182, 0.3);
+        }
+
+        .theme-card.fatigue {
+            border-color: #2ecc71;
+        }
+
+        .theme-card.fatigue:hover {
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .theme-card.pain {
+            border-color: #e74c3c;
+        }
+
+        .theme-card.pain:hover {
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .theme-card.prayer {
+            border-color: #f1c40f;
+        }
+
+        .theme-card.prayer:hover {
+            box-shadow: 0 10px 20px rgba(241, 196, 15, 0.3);
+        }
+
+        .theme-card h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .theme-card p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* Caminho das Bênçãos */
+        .blessings-path {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: 15px;
+            border-left: 5px solid #d4af37;
+        }
+
+        .blessings-path h2 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: #d4af37;
+            color: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* Efeitos de Partículas */
+        .sparkle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #f1c40f;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* Efeitos Temáticos */
+        .theme-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .theme-effect.active {
+            opacity: 0.3;
+        }
+
+        /* Depressão - Efeito de Água Calma */
+        .depression-effect {
+            background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1), transparent);
+        }
+
+        /* Tristeza - Efeito de Neblina Roxa */
+        .sadness-effect {
+            background: radial-gradient(circle at center, rgba(155, 89, 182, 0.1), transparent);
+        }
+
+        /* Fadiga - Efeito de Floresta */
+        .fatigue-effect {
+            background: radial-gradient(circle at center, rgba(46, 204, 113, 0.1), transparent);
+        }
+
+        /* Dor - Efeito de Fogo Suave */
+        .pain-effect {
+            background: radial-gradient(circle at center, rgba(231, 76, 60, 0.1), transparent);
+        }
+
+        /* Oração - Efeito de Luz Dourada */
+        .prayer-effect {
+            background: radial-gradient(circle at center, rgba(241, 196, 15, 0.1), transparent);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .verse-text {
+                font-size: 1.2rem;
+            }
+            
+            .themes {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .theme-card {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Carregamento -->
+    <div id="loading-screen">
+        <div class="stars"></div>
+        <div class="loading-content">
+            <h1>Arca do Saber</h1>
+            <p>Preparando a Palavra de Deus para você...</p>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <div class="ark"></div>
+        </div>
+        <div class="golden-sea"></div>
+    </div>
+
+    <!-- Página Principal -->
+    <div id="main-content">
+        <!-- Efeitos de Fundo -->
+        <div class="golden-rain" id="golden-rain"></div>
+        <div class="lightning" id="lightning"></div>
+        
+        <!-- Efeitos Temáticos -->
+        <div class="theme-effect depression-effect" id="depression-effect"></div>
+        <div class="theme-effect sadness-effect" id="sadness-effect"></div>
+        <div class="theme-effect fatigue-effect" id="fatigue-effect"></div>
+        <div class="theme-effect pain-effect" id="pain-effect"></div>
+        <div class="theme-effect prayer-effect" id="prayer-effect"></div>
+
+        <header>
+            <h1 class="title">Arca do Saber</h1>
+            <p class="subtitle">Biblioteca Bíblica com Direcionamento Divino</p>
+        </header>
+
+        <button class="word-button" id="word-button">Receba a Palavra para Hoje</button>
+
+        <div class="verse-container" id="verse-container">
+            <div class="verse-text" id="verse-text"></div>
+            <div class="verse-reference" id="verse-reference"></div>
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10 L60 40 L90 40 L65 60 L75 90 L50 70 L25 90 L35 60 L10 40 L40 40 Z' fill='%23d4af37'/></svg>" class="angel" id="angel" alt="Anjo">
+        </div>
+
+        <div class="themes">
+            <div class="theme-card depression" onclick="showTheme('depression')">
+                <h3>Depressão</h3>
+                <p>Versículos para momentos de escuridão e desespero</p>
+            </div>
+            <div class="theme-card sadness" onclick="showTheme('sadness')">
+                <h3>Tristeza</h3>
+                <p>Palavras de consolo para o coração aflito</p>
+            </div>
+            <div class="theme-card fatigue" onclick="showTheme('fatigue')">
+                <h3>Fadiga e Cansaço</h3>
+                <p>Força para os cansados e sobrecarregados</p>
+            </div>
+            <div class="theme-card pain" onclick="showTheme('pain')">
+                <h3>Dores no Corpo</h3>
+                <p>Cura para o corpo e para a alma</p>
+            </div>
+            <div class="theme-card prayer" onclick="showTheme('prayer')">
+                <h3>Orações por Ajuda</h3>
+                <p>Versículos para fortalecer sua vida de oração</p>
+            </div>
+        </div>
+
+        <div class="blessings-path">
+            <h2>Caminho das Bênçãos</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Buscar a Deus em Oração</h4>
+                        <p>"Buscar-me-eis e me achareis quando me buscardes de todo o vosso coração." (Jeremias 29:13)</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Ler a Bíblia Diariamente</h4>
+                        <p>"Não se aparte da tua boca o livro desta Lei; antes, medita nele dia e noite." (Josué 1:8)</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Afastar-se do Pecado</h4>
+                        <p>"Se confessarmos os nossos pecados, ele é fiel e justo para nos perdoar." (1 João 1:9)</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Agradecer pelas Conquistas</h4>
+                        <p>"Em tudo dai graças, porque esta é a vontade de Deus." (1 Tessalonicenses 5:18)</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Ajudar o Próximo</h4>
+                        <p>"Levai as cargas uns dos outros e assim cumprireis a lei de Cristo." (Gálatas 6:2)</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h4>Confiar no Tempo de Deus</h4>
+                        <p>"Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu." (Eclesiastes 3:1)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de versículos
+        const verses = [
+            { text: "Porque Deus tanto amou o mundo que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna.", reference: "João 3:16" },
+            { text: "O Senhor é o meu pastor; de nada terei falta.", reference: "Salmos 23:1" },
+            { text: "Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.", reference: "Salmos 37:5" },
+            { text: "Tudo posso naquele que me fortalece.", reference: "Filipenses 4:13" },
+            { text: "O choro pode durar uma noite, mas a alegria vem pela manhã.", reference: "Salmos 30:5" },
+            { text: "Lança o teu cuidado sobre o Senhor, e ele te susterá; nunca permitirá que o justo seja abalado.", reference: "Salmos 55:22" },
+            { text: "Venham a mim, todos os que estão cansados e sobrecarregados, e eu lhes darei descanso.", reference: "Mateus 11:28" },
+            { text: "O Senhor é a minha luz e a minha salvação; de quem terei temor?", reference: "Salmos 27:1" },
+            { text: "Mas os que esperam no Senhor renovam as suas forças; sobem com asas como águias, correm e não se cansam, caminham e não se fatigam.", reference: "Isaías 40:31" },
+            { text: "Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel.", reference: "Isaías 41:10" }
+        ];
+
+        // Versículos por tema
+        const themeVerses = {
+            depression: [
+                { text: "O Senhor está perto dos que têm o coração quebrantado e salva os de espírito abatido.", reference: "Salmos 34:18" },
+                { text: "Porque eu bem sei os pensamentos que tenho a vosso respeito, diz o Senhor; pensamentos de paz, e não de mal, para vos dar o fim que esperais.", reference: "Jeremias 29:11" },
+                { text: "Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.", reference: "1 Pedro 5:7" },
+                { text: "O Espírito do Senhor Deus está sobre mim, porque o Senhor me ungiu para pregar boas-novas aos quebrantados.", reference: "Isaías 61:1" },
+                { text: "Porque não nos tem dado Deus o espírito de temor, mas de fortaleza, e de amor, e de moderação.", reference: "2 Timóteo 1:7" }
+            ],
+            sadness: [
+                { text: "Ele enxugará dos seus olhos toda lágrima. Não haverá mais morte, nem tristeza, nem choro, nem dor, pois a antiga ordem já passou.", reference: "Apocalipse 21:4" },
+                { text: "Bendito seja o Deus e Pai de nosso Senhor Jesus Cristo, o Pai das misericórdias e o Deus de toda consolação.", reference: "2 Coríntios 1:3" },
+                { text: "Alegrai-vos na esperança, sede pacientes na tribulação, perseverai na oração.", reference: "Romanos 12:12" },
+                { text: "Ainda que a figueira não floresça, exultarei no Deus da minha salvação.", reference: "Habacuque 3:17-18" },
+                { text: "O choro pode durar uma noite, mas a alegria vem pela manhã.", reference: "Salmos 30:5" }
+            ],
+            fatigue: [
+                { text: "Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.", reference: "Mateus 11:28" },
+                { text: "Mas os que esperam no Senhor renovam as suas forças; sobem com asas como águias, correm e não se cansam, caminham e não se fatigam.", reference: "Isaías 40:31" },
+                { text: "Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel.", reference: "Isaías 41:10" },
+                { text: "E não nos cansemos de fazer o bem, porque a seu tempo ceifaremos, se não houvermos desfalecido.", reference: "Gálatas 6:9" },
+                { text: "Porque a nossa leve e momentânea tribulação produz para nós um peso eterno de glória mui excelente.", reference: "2 Coríntios 4:17" }
+            ],
+            pain: [
+                { text: "Ele foi traspassado por causa das nossas transgressões, esmagado por causa de nossas iniquidades; o castigo que nos trouxe paz estava sobre ele, e pelas suas feridas fomos curados.", reference: "Isaías 53:5" },
+                { text: "Está alguém entre vós doente? Chame os presbíteros da igreja, e estes façam oração sobre ele, ungindo-o com óleo, em nome do Senhor.", reference: "Tiago 5:14" },
+                { text: "O mesmo Espírito testifica com o nosso espírito que somos filhos de Deus. E, se somos filhos, somos logo herdeiros também, herdeiros de Deus e co-herdeiros de Cristo.", reference: "Romanos 8:16-17" },
+                { text: "E o Deus de toda a graça, que em Cristo vos chamou à sua eterna glória, depois de haverdes padecido um pouco, ele mesmo vos aperfeiçoará, confirmará, fortificará e fortalecerá.", reference: "1 Pedro 5:10" },
+                { text: "Mas ele foi ferido por causa das nossas transgressões, e moído por causa das nossas iniquidades; o castigo que nos traz a paz estava sobre ele, e pelas suas pisaduras fomos sarados.", reference: "Isaías 53:5" }
+            ],
+            prayer: [
+                { text: "Orem continuamente.", reference: "1 Tessalonicenses 5:17" },
+                { text: "Não andem ansiosos por coisa alguma, mas em tudo, pela oração e súplicas, e com ação de graças, apresentem seus pedidos a Deus.", reference: "Filipenses 4:6" },
+                { text: "Portanto, confessem os seus pecados uns aos outros e orem uns pelos outros para serem curados. A oração de um justo é poderosa e eficaz.", reference: "Tiago 5:16" },
+                { text: "E tudo o que pedirdes em oração, crendo, o recebereis.", reference: "Mateus 21:22" },
+                { text: "Se vós estiverdes em mim, e as minhas palavras estiverem em vós, pedireis tudo o que quiserdes, e vos será feito.", reference: "João 15:7" }
+            ]
+        };
+
+        // Carregamento da página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simular carregamento
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 100) progress = 100;
+                document.getElementById('loading-progress').style.width = `${progress}%`;
+                
+                if (progress === 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('loading-screen').style.display = 'none';
+                            document.getElementById('main-content').style.display = 'block';
+                            createGoldenRain();
+                        }, 1000);
+                    }, 500);
+                }
+            }, 200);
+        });
+
+        // Criar chuva dourada
+        function createGoldenRain() {
+            const goldenRain = document.getElementById('golden-rain');
+            for (let i = 0; i < 100; i++) {
+                const drop = document.createElement('div');
+                drop.classList.add('golden-drop');
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDuration = `${3 + Math.random() * 5}s`;
+                drop.style.animationDelay = `${Math.random() * 5}s`;
+                goldenRain.appendChild(drop);
+            }
+        }
+
+        // Efeito de raio
+        function triggerLightning() {
+            const lightning = document.getElementById('lightning');
+            lightning.classList.add('active');
+            setTimeout(() => {
+                lightning.classList.remove('active');
+            }, 500);
+        }
+
+        // Mostrar versículo aleatório
+        function showRandomVerse() {
+            const randomIndex = Math.floor(Math.random() * verses.length);
+            const verse = verses[randomIndex];
+            
+            document.getElementById('verse-text').textContent = verse.text;
+            document.getElementById('verse-reference').textContent = verse.reference;
+            
+            const verseContainer = document.getElementById('verse-container');
+            verseContainer.classList.remove('show');
+            
+            // Resetar efeitos temáticos
+            resetThemeEffects();
+            
+            // Efeitos especiais
+            triggerLightning();
+            createSparkles();
+            
+            setTimeout(() => {
+                verseContainer.classList.add('show');
+                document.getElementById('angel').classList.add('show');
+                
+                // Tocar som de harpa
+                const harpSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...');
+                harpSound.volume = 0.3;
+                harpSound.play().catch(e => console.log('Audio play failed:', e));
+            }, 300);
+        }
+
+        // Mostrar versículos por tema
+        function showTheme(theme) {
+            const themeVersesList = themeVerses[theme];
+            const randomIndex = Math.floor(Math.random() * themeVersesList.length);
+            const verse = themeVersesList[randomIndex];
+            
+            document.getElementById('verse-text').textContent = verse.text;
+            document.getElementById('verse-reference').textContent = verse.reference;
+            
+            const verseContainer = document.getElementById('verse-container');
+            verseContainer.classList.remove('show');
+            
+            // Ativar efeito temático
+            resetThemeEffects();
+            document.getElementById(`${theme}-effect`).classList.add('active');
+            
+            // Mudar cor de fundo conforme o tema
+            let bgColor;
+            switch(theme) {
+                case 'depression': bgColor = '#0a1a2a'; break;
+                case 'sadness': bgColor = '#1a0a2a'; break;
+                case 'fatigue': bgColor = '#0a2a1a'; break;
+                case 'pain': bgColor = '#2a0a0a'; break;
+                case 'prayer': bgColor = '#2a2a0a'; break;
+                default: bgColor = '#0a0a1a';
+            }
+            document.body.style.backgroundColor = bgColor;
+            
+            // Efeitos especiais
+            createSparkles();
+            
+            setTimeout(() => {
+                verseContainer.classList.add('show');
+                document.getElementById('angel').classList.add('show');
+            }, 300);
+        }
+
+        // Resetar efeitos temáticos
+        function resetThemeEffects() {
+            document.querySelectorAll('.theme-effect').forEach(effect => {
+                effect.classList.remove('active');
+            });
+            document.body.style.backgroundColor = '#0a0a1a';
+        }
+
+        // Criar efeito de partículas
+        function createSparkles() {
+            for (let i = 0; i < 30; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.left = `${20 + Math.random() * 60}%`;
+                sparkle.style.top = `${20 + Math.random() * 60}%`;
+                sparkle.style.opacity = '0.8';
+                sparkle.style.transform = `scale(${0.5 + Math.random()})`;
+                document.body.appendChild(sparkle);
+                
+                // Animação
+                const animation = sparkle.animate([
+                    { transform: 'translateY(0) scale(1)', opacity: 0.8 },
+                    { transform: `translateY(${-20 - Math.random() * 30}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                });
+                
+                animation.onfinish = () => sparkle.remove();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('word-button').addEventListener('click', showRandomVerse);
+        
+        // Efeito ao passar o mouse sobre versículos temáticos
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.addEventListener('mouseover', () => {
+                createSparklesAroundElement(card);
+            });
+        });
+
+        function createSparklesAroundElement(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 10; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.left = `${rect.left + Math.random() * rect.width}px`;
+                sparkle.style.top = `${rect.top + Math.random() * rect.height}px`;
+                sparkle.style.opacity = '0.8';
+                document.body.appendChild(sparkle);
+                
+                const animation = sparkle.animate([
+                    { transform: 'scale(1)', opacity: 0.8 },
+                    { transform: 'scale(0)', opacity: 0 }
+                ], {
+                    duration: 500 + Math.random() * 500,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                });
+                
+                animation.onfinish = () => sparkle.remove();
+            }
+        }
+    </script>
+</body>
+</html>
